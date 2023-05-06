@@ -22,7 +22,7 @@ jobs:
           POSTGRES_USER: root
           POSTGRES_PASSWORD: secretpass
           POSTGRES_DB: bank
-        ports:git a
+        ports:
           - 5432:5432
         options: >-
           --health-cmd pg_isready
