@@ -15,7 +15,7 @@ type Store struct {
 // NewStore creates a new store
 func NewStore(db *sql.DB) *Store {
 	return &Store{
-		db: 	 db,
+		db:      db,
 		Queries: New(db),
 	}
 }
@@ -40,23 +40,23 @@ func (store *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
 
 // TransferTxParams contains the input parameters of the transfer transaction
 type TransferTxParams struct {
-	FromAccountID 	int64 `json:"from_account_id"`
-	ToAccountID 	int64 `json:"to_account_id"`
-	Amount 			int64 `json:"amount"`
+	FromAccountID int64 `json:"from_account_id"`
+	ToAccountID   int64 `json:"to_account_id"`
+	Amount        int64 `json:"amount"`
 }
 
 // TransferTxResult is the result of the transfer transaction
 type TransferTxResult struct {
-	Transfer 	Transfer `json:"transfer"`
-	FromAccount	Account	 `json:"from_account"`
-	ToAccount	Account	 `json:"to_account"`
-	FromEntry	Entry	 `json:"from_entry"`
-	ToEntry		Entry	 `json:"to_entry"`
+	Transfer    Transfer `json:"transfer"`
+	FromAccount Account  `json:"from_account"`
+	ToAccount   Account  `json:"to_account"`
+	FromEntry   Entry    `json:"from_entry"`
+	ToEntry     Entry    `json:"to_entry"`
 }
 
 // TransferTx performs a money transfer from one account to the other
 // 1. It creates a transfer record, 2. add account entries and update accounts balance within a single database transaction
-func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error){
+func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error) {
 	var result TransferTxResult
 
 	err := store.execTx(ctx, func(q *Queries) error {
@@ -66,7 +66,7 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 		result.Transfer, err = q.CreateTransfer(ctx, CreateTransferParams{
 			FromAccountID: arg.FromAccountID,
 			ToAccountID:   arg.ToAccountID,
-			Amount:		   arg.Amount,
+			Amount:        arg.Amount,
 		})
 		if err != nil {
 			return err
@@ -75,7 +75,7 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 		// account entry for account 1 with the deduction
 		result.FromEntry, err = q.CreateEntry(ctx, CreateEntryParams{
 			AccountID: arg.FromAccountID,
-			Amount: -arg.Amount,
+			Amount:    -arg.Amount,
 		})
 		if err != nil {
 			return err
@@ -88,28 +88,41 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 		})
 		if err != nil {
 			return err
-		}	
-		
-		//Get account balance fromAccount: get account from db then add/sub amount of money from its balance and update back back to the db
-		result.FromAccount, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
-			ID:		 arg.FromAccountID,
-			Amount:  -arg.Amount,
-		})
-		if err != nil {
-			return err
 		}
 
-		//Get account balance toAccount: get account from db then add/sub amount of money from its balance and update back back to the db
-		result.ToAccount, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
-			ID:		 arg.ToAccountID,
-			Amount:  arg.Amount,
-		})
-		if err != nil {
-			return err
-		}
-
+		// the if statement allows the db transaction to updaate respective account. where fromAccount would be updated before the toAccount else vice-versa
+		if arg.FromAccountID < arg.ToAccountID {
+			result.FromAccount, result.ToAccount, err = addMoney(ctx, q, arg.FromAccountID, -arg.Amount, arg.ToAccountID, arg.Amount)
+		} else {
+			//Get account balance toAccount: get account from db then add/sub amount of money from its balance and update back back to the db
+			result.ToAccount, result.FromAccount, err = addMoney(ctx, q, arg.ToAccountID, arg.Amount, arg.FromAccountID, -arg.Amount)
+		}		
 		return nil
 	})
 
 	return result, err
+}
+
+
+func addMoney(
+	ctx context.Context,
+	q *Queries,
+	accountID1 int64,
+	amount1 int64,
+	accountID2 int64,
+	amount2 int64,
+) (account1 Account, account2 Account, err error){
+	account1, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
+		ID: accountID1,
+		Amount: amount1,
+	})
+	if err != nil{
+		return
+	}
+
+	account2, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
+		ID: accountID2,
+		Amount: amount2,
+	})
+	return
 }
