@@ -12,8 +12,10 @@ import (
 
 // to prevent independent test unit so i created a duplicate TestCreateAccount that wouldn't be run as a unit test since no prefix Test before it.
 func createRandomAccount(t *testing.T) Account{
+	user := createRandomUser(t)
+
 	arg := CreateAccountParams{
-		Owner: util.RandomOwner(),
+		Owner: user.Username,
 		Balance: util.RandomBalance(),
 		Currency: util.RandomCurrency(),
 	}
