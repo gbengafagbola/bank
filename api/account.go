@@ -11,7 +11,7 @@ import (
 // create account struct
 type createAccountRequest struct {
 	Owner    string `json:"owner" binding:"required"`
-	Currency string `json:"currency" binding:"required,oneof=USD EUR"`	
+	Currency string `json:"currency" binding:"required,currency"`	
 }
 
 
@@ -46,7 +46,7 @@ type getAccountRequest struct {
 // get account by id
 func (server *Server) getAccount(ctx *gin.Context){
 	var req getAccountRequest
-	if err := ctx.ShouldBindUri(&req); err != nil {
+	if err := ctx.ShouldBindUri(&req); err != nil { 
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
