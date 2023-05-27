@@ -72,22 +72,27 @@ func TestUpdateAccount(t *testing.T){
 }
 
 func TestListAccounts(t *testing.T){
+	var lastAccount Account
+
 	//creating several accounts to test
 	for i := 0; i < 10; i++ {
-		createRandomAccount(t)
+		lastAccount = createRandomAccount(t)
 	}
 
 	arg := ListAccountsParams {
+		Owner:  lastAccount.Owner,
 		Limit: 5, //skip the first 5 records
-		Offset: 5, //return the 5 records
+		Offset: 0, //return the 5 records
 	}
 
 	accounts, err := testQueries.ListAccounts(context.Background(), arg)
 	require.NoError(t, err)
-	require.Len(t, accounts, 5) // require the length of the return account slice to be 5
+	require.NotEmpty(t, accounts)
+
 	// we iterate through the list of the accounts and ensure they are not empty 
 	for _, account := range accounts {
 		require.NotEmpty(t, account)
+		require.Equal(t, lastAccount.Owner, account.Owner) 
 	}
 }
 
