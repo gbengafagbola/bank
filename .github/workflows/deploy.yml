@@ -12,11 +12,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
-
-    permissions:
-      id-token: write
-      contents: read 
-
+      
     steps:
     - name: Checkout repo
       uses: actions/checkout@v3
