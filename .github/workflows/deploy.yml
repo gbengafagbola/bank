@@ -13,6 +13,10 @@ jobs:
       id-token: write
       contents: read
 
+    permissions:
+      id-token: write
+      contents: read 
+
     steps:
     - name: Checkout repo
       uses: actions/checkout@v3
@@ -20,8 +24,8 @@ jobs:
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v2 
       with:
-        role-to-assume: arn:aws:iam::235648760886:user/workflow-access
-        aws-region: us-west-2
+        role-to-assume: arn:aws:iam::235648760886:user/github-ci
+        aws-region: us-east-1
 
     - name: Login to Amazon ECR
       id: login-ecr
