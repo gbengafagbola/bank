@@ -46,7 +46,7 @@ jobs:
       run: |
         feature/ci-deploy
         docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG -t $REGISTRY/$REPOSITORY:latest .
-        docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+        docker push -a $REGISTRY/$REPOSITORY
 
     - name: Update kube config
       run: aws eks update-kubeconfig --name bank --region us-west-2
