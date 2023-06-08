@@ -45,7 +45,7 @@ jobs:
         IMAGE_TAG: ${{ github.sha }}
       run: |
         feature/ci-deploy
-        docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG $REGISTRY/$REPOSITORY:latest .
+        docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG -t $REGISTRY/$REPOSITORY:latest .
         docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
 
     - name: Update kube config
