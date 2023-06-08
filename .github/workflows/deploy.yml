@@ -44,7 +44,6 @@ jobs:
         REPOSITORY: bank
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        feature/ci-deploy
         docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG -t $REGISTRY/$REPOSITORY:latest .
         docker push -a $REGISTRY/$REPOSITORY
 
